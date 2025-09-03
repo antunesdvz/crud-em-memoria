@@ -1,7 +1,9 @@
 import express from "express";
+import { imprime } from "./middleware.js";
 
 const app = express();
 app.use(express.json());
+app.use(imprime);
 
 let ultimoId = 0;
 
