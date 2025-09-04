@@ -1,19 +1,11 @@
 import express from "express";
+import rotaUsuario from "./rotas/rota-usuarios.js";
 
 const app = express();
-app.use(express.json());
 
-let ultimoId = 0;
+app.use(express.json()); // Middleware para interpretar JSON
+app.use("/usuarios", rotaUsuario);
 
-// criar uma rota para pegar todos os usuarios
-const usuario_admin = {
-    id: ultimoId,
-    nome: "admin",
-    email: "@email.com"
-};
-
-let usuarios = [usuario_admin];
-
-
-
-app.listen(3000);
+app.listen(3000, () => {
+    console.log("API rodando na porta 3000");
+});
