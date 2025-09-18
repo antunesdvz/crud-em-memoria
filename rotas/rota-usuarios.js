@@ -1,18 +1,35 @@
-import { Router } from "express";
+import Router from "express";
 import {
   listarTodosOsUsuarios,
-  buscarPeloId,
   criarUsuario,
-  alterarUsuario,
   deletarUsuario,
+  alterarUsuario,
+  buscarPeloId,
 } from "../controller/usuarios-controller.js";
 
 const roteador = Router();
 
-roteador.get("/", listarTodosOsUsuarios);
-roteador.get("/:id", buscarPeloId);
-roteador.post("/", criarUsuario);
-roteador.patch("/:id", alterarUsuario);
-roteador.delete("/:id", deletarUsuario);
+//agora eu vou passar as rotas pra ele
+roteador.get("/", (req, res) => {
+  console.log(req.headers);
+  listarTodosOsUsuarios(req, res);
+});
+
+roteador.post("/", (req, res) => {
+  console.log(req.headers);
+  criarUsuario(req, res);
+});
+
+roteador.delete("/:id", (req, res) => {
+  deletarUsuario(req, res);
+});
+
+roteador.patch("/:id", (req, res) => {
+  alterarUsuario(req, res);
+});
+
+roteador.get("/:id", (req, res) => {
+  buscarPeloId(req, res);
+});
 
 export default roteador;

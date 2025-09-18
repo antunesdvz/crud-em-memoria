@@ -2,92 +2,99 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function listarTodosOsUsuarios(req, res) {
+
+let ultimoId = 1;
+
+const usuario_admin = {
+  id: ultimoId,
+  nome: "admin",
+  email: "admin@admin",
+};
+
+let usuarios = [usuario_admin];
+//async diz que a funcao eh assincrona e pode demorar um pouco
+async function listarTodosOsUsuarios(req, res) {
+  console.log("CHEGUEI NO CONTROLLER");
+  
+  let usuarios_do_banco = [];
+
   try {
-    const usuarios = await prisma.users.findMany();
-    res.status(200).json(usuarios);
+    usuarios_do_banco = await prisma.users.findMany();
   } catch (error) {
-    res.status(500).json({ mensagem: "Erro ao listar usuários" });
+    console.log(error);
   }
+
+  res.status(200).json(usuarios);
 }
 
-export async function buscarPeloId(req, res) {
+async function criarUsuario(req, res) {
+  const { nome, email } = req.body;
+      if ( !nome || !email) {
+        return res.status(400).json({mensagem: "error"});
+      }
+      res.status(201).json({mensagem: "usuario criado com sucesso"});
+};
+
+async function deletarUsuario(req, res) {
+  const id = parseInt (req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({mensagem: "ID invalido, precisa ser um numero"});
+  }
+
+  try { 
+    await prisma.users.delete({where: {id: id}});
+  } catch (error) {
+    console.log(error.message);
+  }
+
+  res.status(204).send();
+}
+
+async function alterarUsuario(req, res) {
   const id = parseInt(req.params.id);
 
   if (isNaN(id)) {
-    return res.status(400).json({ mensagem: "ID inválido" });
+    return res
+      .status(400)
+      .json({ mensagem: "ID inválido, precisa ser um numero" });
   }
 
-  try {
-    const usuario = await prisma.users.findUnique({ where: { id } });
 
-    if (!usuario) {
-      return res.status(404).json({ mensagem: "Usuário não encontrado" });
+  const { nome , email, idade } = req.body;
+
+  try {
+    await prisma.users.update({
+    where: {id: id}, 
+    data: {
+     nome: nome,
+     email: email,
+    },
+  });
+  } catch (error) {
+    console.log(error.message);
+  }
+  
+  res.status(204).send();
+}
+
+async function buscarPeloId(req, res) {
+    const id = parseInt(req.params.id);
+    try {
+    const usuario = await prisma.users.findUnique({where: { id: id}});
+    } catch (error) {
+      console.log(error.message);
     }
 
     res.status(200).json(usuario);
-  } catch (error) {
-    res.status(500).json({ mensagem: "Erro ao buscar usuário" });
-  }
 }
 
-export async function criarUsuario(req, res) {
-  const { nome, email, idade } = req.body;
+export {
+  listarTodosOsUsuarios,
+  criarUsuario,
+  deletarUsuario,
+  alterarUsuario,
+  buscarPeloId,
+};
 
-  if (!nome || !email) {
-    return res.status(400).json({ mensagem: "Nome e email são obrigatórios" });
-  }
-
-  try {
-    const novoUsuario = await prisma.users.create({
-      data: {
-        nome,
-        email,
-        idade: idade ?? null, // idade opcional
-      },
-    });
-
-    res.status(201).json(novoUsuario);
-  } catch (error) {
-    res.status(500).json({ mensagem: "Erro ao criar usuário" });
-  }
-}
-
-export async function alterarUsuario(req, res) {
-  const id = parseInt(req.params.id);
-  const { nome, email, idade } = req.body;
-
-  if (isNaN(id)) {
-    return res.status(400).json({ mensagem: "ID inválido" });
-  }
-
-  try {
-    const usuarioAtualizado = await prisma.users.update({
-      where: { id },
-      data: {
-        ...(nome && { nome }),
-        ...(email && { email }),
-        ...(idade !== undefined && { idade }),
-      },
-    });
-
-    res.status(200).json(usuarioAtualizado);
-  } catch (error) {
-    res.status(500).json({ mensagem: "Erro ao atualizar usuário" });
-  }
-}
-
-export async function deletarUsuario(req, res) {
-  const id = parseInt(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({ mensagem: "ID inválido" });
-  }
-
-  try {
-    await prisma.users.delete({ where: { id } });
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ mensagem: "Erro ao deletar usuário" });
-  }
-}
+//npx prisma migrate dev aplica as mudanças no banco de dados
+//npx prisma studio abre o banco de dados em uma interface grafica
